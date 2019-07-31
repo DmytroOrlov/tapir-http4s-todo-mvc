@@ -6,8 +6,8 @@ import org.http4s.HttpRoutes
 import org.http4s.server.Server
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{CORS, CORSConfig}
-import org.http4s.syntax.kleisli.http4sKleisliResponseSyntax
-import org.scalatest.{Matchers, Outcome}
+import org.http4s.syntax.kleisli._
+import org.scalatest.{Matchers, OptionValues, Outcome}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -17,7 +17,7 @@ import com.softwaremill.sttp.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import tapir.Endpoint
 import tapir._
 
-class TodoMvcSpec extends org.scalatest.fixture.WordSpec with Matchers {
+class TodoMvcSpec extends org.scalatest.fixture.WordSpec with Matchers with OptionValues {
 
   private val baseUri = uri"http://127.0.0.1:8080"
   private val port    = 8080
@@ -51,7 +51,7 @@ class TodoMvcSpec extends org.scalatest.fixture.WordSpec with Matchers {
   implicit class SendSync[T](req: Request[Either[String, T], Nothing]) {
     def sendSync: SyncRes[T] = {
       val response: Response[Either[String, T]] = req.send().unsafeRunSync()
-      new SyncRes(response.code, response.body.map(_.right.get).right.get, response)
+      new SyncRes(response.code, response.body.map(_.toOption.value).toOption.value, response)
     }
   }
   implicit class TodoId(todo: Todo) {
@@ -87,7 +87,7 @@ class TodoMvcSpec extends org.scalatest.fixture.WordSpec with Matchers {
     }
     "after DELETE, GET yields empty JSON array" in { _ =>
       delete.sendSync
-      getTodos.sendSync.body should be('empty)
+      getTodos.sendSync.body should be(Symbol("empty"))
     }
   }
 

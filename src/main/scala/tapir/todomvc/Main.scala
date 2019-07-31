@@ -1,14 +1,17 @@
 package tapir.todomvc
+
 import cats.effect.{ExitCode, IO, IOApp}
+import cats.implicits._
 import org.http4s.HttpRoutes
+import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{CORS, CORSConfig}
-import org.http4s.server.staticcontent.webjarService
 import org.http4s.server.staticcontent.WebjarService.{Config, WebjarAsset}
-import scala.concurrent.duration._
+import org.http4s.server.staticcontent.webjarService
+import tapir.server.http4s._
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import cats.implicits._
-import org.http4s.implicits._
+import scala.concurrent.duration._
 
 object Main extends IOApp {
 
@@ -24,7 +27,7 @@ object Main extends IOApp {
   def isAsset(asset: WebjarAsset): Boolean =
     List(".js", ".css", ".html").exists(asset.asset.endsWith)
 
-  val webjars: HttpRoutes[IO] = webjarService(Config(blockingExecutionContext = global, filter = isAsset))
+  val webjars: HttpRoutes[IO] = webjarService(Config(global, filter = isAsset))
 
   override def run(args: List[String]): IO[ExitCode] = {
 
